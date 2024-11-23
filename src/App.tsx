@@ -1,34 +1,66 @@
-import { useState } from "react";
-import viteLogo from "/vite.svg";
-import reactLogo from "./assets/react.svg";
-import "./App.css";
+import { useEffect, useRef, useState } from "react";
 
 function App() {
-	const [count, setCount] = useState(0);
+	const canvas = useRef<HTMLCanvasElement>(null);
+	const context = useRef<CanvasRenderingContext2D | null>(null);
+	const [char, setChar] = useState<HTMLImageElement>();
+	const [map, setMap] = useState<HTMLImageElement>();
+
+	const loadChar = () => {
+		const image = new Image();
+    image.src = "/assets/character.png";
+    image.onload = () => {
+			setChar(image);
+		}
+	}
+
+	const loadMap = () => {
+		const image = new Image();
+    image.src = "/assets/map.png";
+    image.onload = () => {
+			setMap(image);
+		}
+	}
+
+	const drawMap = () => {
+		if(!context.current || !map) return
+
+		context.current.drawImage(map, 0, 0, 1362, 1780);
+	}
+
+	const drawChar = (x: number, y: number) => {
+		if(!context.current || !char) return
+
+		context.current.drawImage(char, x, y, x + 60, y + 60);
+	}
+
+	const setContext = () => {
+		if(!canvas.current) return
+
+		context.current = canvas.current.getContext("2d");
+	}
+
+	useEffect(() => {
+		drawChar(20, 20)
+	}, [char])
+
+	useEffect(() => {
+		drawMap()
+	}, [map])
+
+	useEffect(() => {
+		setContext();
+		loadChar();
+		loadMap();
+
+	}, [])
 
 	return (
-		<>
-			<div>
-				<a href="https://vite.dev" target="_blank">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-			</div>
-			<h1>Vite + React</h1>
-			<div className="card">
-				<button onClick={() => setCount((count) => count + 1)}>
-					count is {count}
-				</button>
-				<p>
-					Edit <code>src/App.tsx</code> and save to test HMR
-				</p>
-			</div>
-			<p className="read-the-docs">
-				Click on the Vite and React logos to learn more
-			</p>
-		</>
+		<main className="flex items-center justify-center w-[100vw] overflow-hidden">
+			<canvas ref={canvas}  width={1362} height={1780}>
+
+			</canvas>
+		</main>
 	);
 }
 
