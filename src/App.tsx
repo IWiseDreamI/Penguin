@@ -1,16 +1,45 @@
 import { useEffect, useRef, useState } from "react";
+import Skeleton from "./components/Skeleton";
 
-function App() {
-	const canvas = useRef<HTMLCanvasElement>(null);
-	const context = useRef<CanvasRenderingContext2D | null>(null);
-	const [char, setChar] = useState<HTMLImageElement>();
+const canvasSize = {
+	width: 1362,
+	height: 1780
+}
+
+const App = () => {
+	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+
+	const [char, setChar] = useState<{
+		left: HTMLImageElement | null,
+		right: HTMLImageElement | null
+	}>({
+		left: null,
+		right: null
+	});
 	const [map, setMap] = useState<HTMLImageElement>();
 
+	const [stage, setStage] = useState(0);
+
 	const loadChar = () => {
-		const image = new Image();
-    image.src = "/assets/character.png";
-    image.onload = () => {
-			setChar(image);
+		const leftImg = new Image();
+    leftImg.src = "/assets/character-left.png";
+    
+		const rightImg = new Image();
+    rightImg.src = "/assets/character-right.png";
+    
+		leftImg.onload = () => {
+			setChar((prev) => ({
+				...prev,
+				left: leftImg,
+			}));
+		}
+		
+		rightImg.onload = () => {
+			setChar((prev) => ({
+				...prev,
+				right: rightImg,
+			}));
 		}
 	}
 
@@ -23,43 +52,57 @@ function App() {
 	}
 
 	const drawMap = () => {
-		if(!context.current || !map) return
+		if(!contextRef.current || !map) return
 
-		context.current.drawImage(map, 0, 0, 1362, 1780);
+		contextRef.current.drawImage(map, 0, 0, canvasSize.width, canvasSize.height);
 	}
 
 	const drawChar = (x: number, y: number) => {
-		if(!context.current || !char) return
+		if(!contextRef.current || !char) return
 
-		context.current.drawImage(char, x, y, x + 60, y + 60);
+		const character = stage % 2? char.left: char.right;
+
+		if(!character) return
+
+		contextRef.current.drawImage(character, x, y, 120, 120);
+	}
+
+	const clearRect = () => {
+		if(!canvasRef.current) return
+
+		contextRef.current?.clearRect(0, 0, canvasSize.width, canvasSize.height);
 	}
 
 	const setContext = () => {
-		if(!canvas.current) return
+		if(!canvasRef.current) return
 
-		context.current = canvas.current.getContext("2d");
+		contextRef.current = canvasRef.current.getContext("2d");
 	}
 
 	useEffect(() => {
-		drawChar(20, 20)
-	}, [char])
-
-	useEffect(() => {
-		drawMap()
-	}, [map])
+		clearRect();
+		drawMap();
+		drawChar(800, 1500);
+	}, [char, map, stage])
 
 	useEffect(() => {
 		setContext();
-		loadChar();
 		loadMap();
-
+		loadChar();
 	}, [])
 
 	return (
-		<main className="flex items-center justify-center w-[100vw] overflow-hidden">
-			<canvas ref={canvas}  width={1362} height={1780}>
-
-			</canvas>
+		<main className="
+			flex items-center justify-center 
+			lg:w-[100vw] max-w-[100vw]
+			overflow-hidden relative
+		">
+			<Skeleton setStage={setStage}/>
+			<canvas 
+				ref={canvasRef}  
+				width={1362} height={1780} 
+				className="lg:w-full min-h-[100%] max-w-[180%]"
+				></canvas>
 		</main>
 	);
 }
