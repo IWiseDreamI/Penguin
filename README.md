@@ -1,4 +1,4 @@
-## Инструкция для запуска на Linux
+## Инструкция для запуска
 
 ```git clone https://github.com/IWiseDreamI/Penguin.git```
 
