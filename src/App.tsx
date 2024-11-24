@@ -6,7 +6,41 @@ const canvasSize = {
 	height: 1780
 }
 
+const points = [
+	{
+		top: 1500,
+		left: 800
+	},
+	{
+		top: 1200,
+		left: 450,
+	},
+	{
+		top: 940,
+		left: 772,
+	}, 
+	{
+		top: 700,
+		left: 470
+	},
+	{
+		top: 510,
+		left: 785
+	},
+	{
+		top: 290,
+		left: 485
+	},
+]
+
 const App = () => {
+	const charCords = useRef<{
+		top: number, 
+		left: number
+	}>({
+		top: 1500,
+		left: 800
+	})
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -69,8 +103,10 @@ const App = () => {
 
 	const clearRect = () => {
 		if(!canvasRef.current) return
+		
+		drawMap();
 
-		contextRef.current?.clearRect(0, 0, canvasSize.width, canvasSize.height);
+		contextRef.current?.clearRect(0, 0, canvasSize.width, canvasSize.height)
 	}
 
 	const setContext = () => {
@@ -79,10 +115,45 @@ const App = () => {
 		contextRef.current = canvasRef.current.getContext("2d");
 	}
 
+	const drawFrame = (x: number, y: number) => {
+		const goCords = points[stage];
+		if (
+			charCords.current.left + 2 > goCords.left && charCords.current.left - 2 < goCords.left
+		) {
+			return;
+		}
+
+		clearRect();
+
+		charCords.current.top += y;
+		charCords.current.left += x;
+
+
+		drawMap()
+		drawChar(
+			charCords.current.left, 
+			charCords.current.top
+		);		
+
+		window.requestAnimationFrame(() => drawFrame(x, y));
+	}
+
+	const animateGoTo = () => {
+		const goCords = points[stage];
+
+		const leftStep = (goCords.left - charCords.current.left) / 120;  
+		const topStep = (goCords.top - charCords.current.top) / 120;
+
+		window.requestAnimationFrame(() => drawFrame(leftStep, topStep));
+	}
+
 	useEffect(() => {
 		clearRect();
 		drawMap();
-		drawChar(800, 1500);
+		drawChar(
+			charCords.current.left, 
+			charCords.current.top
+		);
 	}, [char, map, stage])
 
 	useEffect(() => {
@@ -91,18 +162,22 @@ const App = () => {
 		loadChar();
 	}, [])
 
+	useEffect(() => {
+		animateGoTo();
+	}, [stage])
+
 	return (
 		<main className="
 			flex items-center justify-center 
 			lg:w-[100vw] max-w-[100vw]
 			overflow-hidden relative
 		">
-			<Skeleton setStage={setStage}/>
+			<Skeleton setStage={setStage} stage={stage}/>
 			<canvas 
-				ref={canvasRef}  
-				width={1362} height={1780} 
+				ref={canvasRef}
+				width={1362} height={1780}
 				className="lg:w-full min-h-[100%] max-w-[180%]"
-				></canvas>
+			></canvas>
 		</main>
 	);
 }

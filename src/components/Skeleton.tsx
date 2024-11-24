@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import debounce from "../helpers/debounce";
 
 const skeleton = [
@@ -24,8 +24,9 @@ const skeleton = [
 	},
 ]
 
-const Skeleton = ({setStage}: { setStage: any }) => {
+const Skeleton = ({setStage, stage}: { setStage: any, stage: any }) => {
   const [isMobile, setIsMobile] = useState(false); 
+  const stageRef = useRef(stage);
 
   const updateView = () => {
     if(window.innerWidth < 1024) {
@@ -35,6 +36,26 @@ const Skeleton = ({setStage}: { setStage: any }) => {
       setIsMobile(false)
     }
   }
+
+  const updateStage = (n: number) => {
+    if(stageRef.current == n) return;
+    else if(n > stageRef.current) {
+      setStage(stageRef.current + 1);
+      setTimeout(() => {
+        updateStage(n);
+      }, 2000)  
+    }
+    else {
+      setStage(stageRef.current - 1);
+      setTimeout(() => {
+        updateStage(n);
+      }, 2000)  
+    }
+  }
+
+  useEffect(() => {
+    stageRef.current = stage;
+  }, [stage])
 
   useEffect(() => {
     updateView()
@@ -56,7 +77,7 @@ const Skeleton = ({setStage}: { setStage: any }) => {
               left: `${isMobile? item.sm.left: item.lg.left}%`,
               top: `${isMobile? item.sm.top: item.lg.top}%`
             }}
-            onClick={() => setStage(i + 1)}
+            onClick={() => updateStage(i + 1)}
             key={`${item.lg.top}-${i}`}
           />
         )
