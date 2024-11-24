@@ -104,9 +104,9 @@ const App = () => {
 	const clearRect = () => {
 		if(!canvasRef.current) return
 		
-		drawMap();
-
 		contextRef.current?.clearRect(0, 0, canvasSize.width, canvasSize.height)
+	
+		drawMap();
 	}
 
 	const setContext = () => {
@@ -128,8 +128,6 @@ const App = () => {
 		charCords.current.top += y;
 		charCords.current.left += x;
 
-
-		drawMap()
 		drawChar(
 			charCords.current.left, 
 			charCords.current.top
@@ -149,7 +147,6 @@ const App = () => {
 
 	useEffect(() => {
 		clearRect();
-		drawMap();
 		drawChar(
 			charCords.current.left, 
 			charCords.current.top

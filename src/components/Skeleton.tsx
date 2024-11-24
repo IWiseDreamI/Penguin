@@ -3,6 +3,10 @@ import debounce from "../helpers/debounce";
 
 const skeleton = [
 	{
+    lg: { left: 56, top: 83 },
+    sm: { left: 64, top: 83 } 
+	},
+	{
     lg: { left: 32, top: 67 },
     sm: { left: 18, top: 67} 
 	},
@@ -26,6 +30,8 @@ const skeleton = [
 
 const Skeleton = ({setStage, stage}: { setStage: any, stage: any }) => {
   const [isMobile, setIsMobile] = useState(false); 
+
+  const skeletonRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef(stage);
 
   const updateView = () => {
@@ -37,19 +43,28 @@ const Skeleton = ({setStage, stage}: { setStage: any, stage: any }) => {
     }
   }
 
+  const nextStage = (n: number) => { 
+    if(!skeletonRef.current) return;
+    skeletonRef.current.style.zIndex = '-1';
+
+    setTimeout(() => {
+      updateStage(n);
+    }, 2000);
+  }
+
   const updateStage = (n: number) => {
-    if(stageRef.current == n) return;
+    if(stageRef.current == n) {
+      if(!skeletonRef.current) return;
+      skeletonRef.current.style.zIndex = '1';
+      return;
+    }
     else if(n > stageRef.current) {
       setStage(stageRef.current + 1);
-      setTimeout(() => {
-        updateStage(n);
-      }, 2000)  
+      nextStage(n);
     }
     else {
       setStage(stageRef.current - 1);
-      setTimeout(() => {
-        updateStage(n);
-      }, 2000)  
+      nextStage(n);
     }
   }
 
@@ -63,7 +78,13 @@ const Skeleton = ({setStage, stage}: { setStage: any, stage: any }) => {
   }, [])
 
   return (
-    <div className="absolute left-0 top-0 w-full h-full">
+    <div 
+      className="
+        absolute left-0 
+        top-0 w-full h-full
+      "
+      ref={skeletonRef}
+    >
       {skeleton.map((item, i) => {
         return (
           <div 
@@ -77,7 +98,7 @@ const Skeleton = ({setStage, stage}: { setStage: any, stage: any }) => {
               left: `${isMobile? item.sm.left: item.lg.left}%`,
               top: `${isMobile? item.sm.top: item.lg.top}%`
             }}
-            onClick={() => updateStage(i + 1)}
+            onClick={() => updateStage(i)}
             key={`${item.lg.top}-${i}`}
           />
         )
