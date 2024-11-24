@@ -1,34 +1,181 @@
-import { useState } from "react";
-import viteLogo from "/vite.svg";
-import reactLogo from "./assets/react.svg";
-import "./App.css";
+import { useEffect, useRef, useState } from "react";
+import Skeleton from "./components/Skeleton";
 
-function App() {
-	const [count, setCount] = useState(0);
+const canvasSize = {
+	width: 1362,
+	height: 1780
+}
+
+const points = [
+	{
+		top: 1500,
+		left: 800
+	},
+	{
+		top: 1200,
+		left: 450,
+	},
+	{
+		top: 940,
+		left: 772,
+	}, 
+	{
+		top: 700,
+		left: 470
+	},
+	{
+		top: 510,
+		left: 785
+	},
+	{
+		top: 290,
+		left: 485
+	},
+]
+
+const App = () => {
+	const charCords = useRef<{
+		top: number, 
+		left: number
+	}>({
+		top: 1500,
+		left: 800
+	})
+	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+
+	const [char, setChar] = useState<{
+		left: HTMLImageElement | null,
+		right: HTMLImageElement | null
+	}>({
+		left: null,
+		right: null
+	});
+	const [map, setMap] = useState<HTMLImageElement>();
+
+	const [stage, setStage] = useState(0);
+
+	const loadChar = () => {
+		const leftImg = new Image();
+    leftImg.src = "/assets/character-left.png";
+    
+		const rightImg = new Image();
+    rightImg.src = "/assets/character-right.png";
+    
+		leftImg.onload = () => {
+			setChar((prev) => ({
+				...prev,
+				left: leftImg,
+			}));
+		}
+		
+		rightImg.onload = () => {
+			setChar((prev) => ({
+				...prev,
+				right: rightImg,
+			}));
+		}
+	}
+
+	const loadMap = () => {
+		const image = new Image();
+    image.src = "/assets/map.png";
+    image.onload = () => {
+			setMap(image);
+		}
+	}
+
+	const drawMap = () => {
+		if(!contextRef.current || !map) return
+
+		contextRef.current.drawImage(map, 0, 0, canvasSize.width, canvasSize.height);
+	}
+
+	const drawChar = (x: number, y: number) => {
+		if(!contextRef.current || !char) return
+
+		const character = stage % 2? char.left: char.right;
+
+		if(!character) return
+
+		contextRef.current.drawImage(character, x, y, 120, 120);
+	}
+
+	const clearRect = () => {
+		if(!canvasRef.current) return
+		
+		contextRef.current?.clearRect(0, 0, canvasSize.width, canvasSize.height)
+	
+		drawMap();
+	}
+
+	const setContext = () => {
+		if(!canvasRef.current) return
+
+		contextRef.current = canvasRef.current.getContext("2d");
+	}
+
+	const drawFrame = (x: number, y: number) => {
+		const goCords = points[stage];
+		if (
+			charCords.current.left + 2 > goCords.left && charCords.current.left - 2 < goCords.left
+		) {
+			return;
+		}
+
+		clearRect();
+
+		charCords.current.top += y;
+		charCords.current.left += x;
+
+		drawChar(
+			charCords.current.left, 
+			charCords.current.top
+		);		
+
+		window.requestAnimationFrame(() => drawFrame(x, y));
+	}
+
+	const animateGoTo = () => {
+		const goCords = points[stage];
+
+		const leftStep = (goCords.left - charCords.current.left) / 120;  
+		const topStep = (goCords.top - charCords.current.top) / 120;
+
+		window.requestAnimationFrame(() => drawFrame(leftStep, topStep));
+	}
+
+	useEffect(() => {
+		clearRect();
+		drawChar(
+			charCords.current.left, 
+			charCords.current.top
+		);
+	}, [char, map, stage])
+
+	useEffect(() => {
+		setContext();
+		loadMap();
+		loadChar();
+	}, [])
+
+	useEffect(() => {
+		animateGoTo();
+	}, [stage])
 
 	return (
-		<>
-			<div>
-				<a href="https://vite.dev" target="_blank">
-					<img src={viteLogo} className="logo" alt="Vite logo" />
-				</a>
-				<a href="https://react.dev" target="_blank">
-					<img src={reactLogo} className="logo react" alt="React logo" />
-				</a>
-			</div>
-			<h1>Vite + React</h1>
-			<div className="card">
-				<button onClick={() => setCount((count) => count + 1)}>
-					count is {count}
-				</button>
-				<p>
-					Edit <code>src/App.tsx</code> and save to test HMR
-				</p>
-			</div>
-			<p className="read-the-docs">
-				Click on the Vite and React logos to learn more
-			</p>
-		</>
+		<main className="
+			flex items-center justify-center 
+			lg:w-[100vw] max-w-[100vw]
+			overflow-hidden relative
+		">
+			<Skeleton setStage={setStage} stage={stage}/>
+			<canvas 
+				ref={canvasRef}
+				width={1362} height={1780}
+				className="lg:w-full min-h-[100%] max-w-[180%]"
+			></canvas>
+		</main>
 	);
 }
 
