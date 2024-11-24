@@ -54,6 +54,7 @@ const App = () => {
 	const [map, setMap] = useState<HTMLImageElement>();
 
 	const [stage, setStage] = useState(0);
+	const [animationStatus, setAnimationStatus] = useState(false);
 
 	const loadChar = () => {
 		const leftImg = new Image();
@@ -118,8 +119,10 @@ const App = () => {
 	const drawFrame = (x: number, y: number) => {
 		const goCords = points[stage];
 		if (
-			charCords.current.left + 2 > goCords.left && charCords.current.left - 2 < goCords.left
+			charCords.current.left + 5 > goCords.left && charCords.current.left - 5 < goCords.left &&
+			charCords.current.top + 5 > goCords.top && charCords.current.top - 5 < goCords.top
 		) {
+			setAnimationStatus(false);
 			return;
 		}
 
@@ -142,6 +145,7 @@ const App = () => {
 		const leftStep = (goCords.left - charCords.current.left) / 120;  
 		const topStep = (goCords.top - charCords.current.top) / 120;
 
+		setAnimationStatus(true);
 		window.requestAnimationFrame(() => drawFrame(leftStep, topStep));
 	}
 
@@ -169,7 +173,7 @@ const App = () => {
 			lg:w-[100vw] max-w-[100vw]
 			overflow-hidden relative
 		">
-			<Skeleton setStage={setStage} stage={stage}/>
+			<Skeleton setStage={setStage} stage={stage} animationStatus={animationStatus}/>
 			<canvas 
 				ref={canvasRef}
 				width={1362} height={1780}

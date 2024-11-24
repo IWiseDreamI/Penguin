@@ -28,11 +28,12 @@ const skeleton = [
 	},
 ]
 
-const Skeleton = ({setStage, stage}: { setStage: any, stage: any }) => {
+const Skeleton = ({setStage, stage, animationStatus}: { setStage: any, stage: any, animationStatus: any }) => {
   const [isMobile, setIsMobile] = useState(false); 
 
   const skeletonRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef(stage);
+  const goalRef = useRef(stage);
 
   const updateView = () => {
     if(window.innerWidth < 1024) {
@@ -43,34 +44,34 @@ const Skeleton = ({setStage, stage}: { setStage: any, stage: any }) => {
     }
   }
 
-  const nextStage = (n: number) => { 
-    if(!skeletonRef.current) return;
-    skeletonRef.current.style.zIndex = '-1';
+  const updateStage = (n?: number) => {
+    if(n != undefined) goalRef.current = n;
 
-    setTimeout(() => {
-      updateStage(n);
-    }, 2000);
-  }
-
-  const updateStage = (n: number) => {
-    if(stageRef.current == n) {
+    if(stageRef.current == goalRef.current) {
       if(!skeletonRef.current) return;
       skeletonRef.current.style.zIndex = '1';
       return;
     }
-    else if(n > stageRef.current) {
+    else if(goalRef.current > stageRef.current) {
       setStage(stageRef.current + 1);
-      nextStage(n);
     }
     else {
       setStage(stageRef.current - 1);
-      nextStage(n);
     }
+    if(!skeletonRef.current) return;
+    skeletonRef.current.style.zIndex = '-1';
   }
 
   useEffect(() => {
     stageRef.current = stage;
   }, [stage])
+
+  useEffect(() => {
+    console.log(animationStatus)
+    if(!animationStatus) {
+      updateStage()
+    }
+  }, [animationStatus])
 
   useEffect(() => {
     updateView()
